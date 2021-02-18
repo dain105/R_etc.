@@ -1,0 +1,162 @@
+library(ncdf4)
+library(raster)
+library(rasterVis)
+library(maps)
+library(mapdata)
+library(maptools)
+
+#lead and lag
+for (lag in 0:12){
+#month 
+  for (month in 1:12){
+    if(!dir.exists(paste0('C:/2019/기후분석/corrmap/out/hgt/lag=',lag))){dir.create(paste0('C:/2019/기후분석/corrmap/out/hgt/lag=',lag))}    
+    if(month-lag<=0){
+      month1=month+12
+      len=39
+    }else{
+      month1=month
+      len=40
+      
+    }
+    
+    # import files
+    hgt<-nc_open('C:/2019/기후분석/corrmap/data/hgt.mon.mean.nc')
+    
+    #rain, temp
+    rain<-read.table('C:/2019/기후분석/corrmap/data/45StnRain.txt')
+    temp<-read.table('C:/2019/기후분석/corrmap/data/45StnTemp.txt')
+    
+    
+    #hgt
+    hgt<-nc_open('C:/2019/기후분석/corrmap/data/hgt.mon.mean.nc')
+    
+    
+    outdir<-paste0('C:/2019/기후분석/corrmap/out/hgt/lag=',lag)
+    
+    #get variable 
+    
+    hgt.var <- ncvar_get( hgt, 'hgt')[,,which( hgt$dim$level$vals ==500),]#hgt=500
+    rain<-rain[7:46,]#1979~2018
+    temp<-temp[7:46,]#1979~2018
+    
+    #slice 1979~2018
+    hgt.var1 <- hgt.var[,,1:480]
+    
+    #data by month
+    hgt.var.mon<-hgt.var1[,,seq(month1-lag,dim(hgt.var1)[3],12)]
+    hgt.var.mon<-hgt.var.mon[,,1:len]
+    #coordinate
+    hgt.lon<-range(ncvar_get(hgt,'lon'))
+    hgt.lat<-range(ncvar_get(hgt,'lat'))
+    
+    #mon/temp/hgt
+    hgt.temp.cor.mon<-matrix(NA,dim(hgt.var1)[1],ncol=dim(hgt.var1)[2])
+    for(i in 1:dim(hgt.var.mon)[1]){
+      for (j in 1:dim(hgt.var.mon)[2]){
+        hgt.temp.cor.mon[i,j]<- cor(temp[(41-len):40,month],hgt.var.mon[i,j,])
+      }
+    }
+    
+    #mon/rain/hgt
+    hgt.rain.cor.mon<-matrix(NA,dim(hgt.var1),ncol=dim(hgt.var1)[2])
+    for(i in 1:dim(hgt.var.mon)[1]){
+      for (j in 1:dim(hgt.var.mon)[2]){
+        hgt.rain.cor.mon[i,j]<- cor(rain[(41-len):40,month],hgt.var.mon[i,j,])
+      }
+    }
+    
+    hgt.temp.cor.mon[which(hgt.temp.cor.mon>0.8)]<-0.8
+    hgt.temp.cor.mon[which(hgt.temp.cor.mon<(-0.8))]<-(-0.8)
+    hgt.rain.cor.mon[which(hgt.rain.cor.mon>0.8)]<-0.8
+    hgt.rain.cor.mon[which(hgt.rain.cor.mon<(-0.8))]<-(-0.8)
+    
+    
+    
+    cor.data1<-c('rain','temp')
+    cor.data2<-c('hgt')
+    cor.data3<-merge(cor.data2,cor.data1)
+    cor.data<-paste0(cor.data3[,1], '.',cor.data3[,2])
+    
+    mon<-c("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC")
+    
+    #cor.test
+    hgt.temp.cor.test<-matrix(NA,dim(hgt.var.mon)[1],ncol=dim(hgt.var.mon)[2])
+    
+    for(i in 1:dim(hgt.var.mon)[1]){
+      for (j in 1:dim(hgt.var.mon)[2]){
+        cc<-cor.test(temp[(41-len):40,month],hgt.var.mon[i,j,],conf.level = 0.9)
+        hgt.temp.cor.test[i,j]<-cc$p.value
+      }
+    }
+    
+    hgt.rain.cor.test<-matrix(NA,dim(hgt.var.mon)[1],ncol=dim(hgt.var.mon)[2])
+    
+    for(i in 1:dim(hgt.var.mon)[1]){
+      for (j in 1:dim(hgt.var.mon)[2]){
+        cc<-cor.test(rain[(41-len):40,month],hgt.var.mon[i,j,],conf.level = 0.9)
+        hgt.rain.cor.test[i,j]<-cc$p.value
+      }
+    }
+    
+    
+    #plot setting
+    pal <- colorRampPalette(c('blue','white','red'))(100)
+    breaks = seq(-0.8,0.8, length=101)
+    breaks1 = seq(-0.8,0.8, length=17)
+    #world border
+    world = map("world2", fill=TRUE, col="transparent", plot=FALSE)
+    world = map2SpatialPolygons(world, world$names, CRS("+proj=longlat +ellps=WGS84"))
+    
+    
+    
+    
+    
+    
+    for( i in 1:2){
+      r <- raster(t(get(paste0(cor.data[i],'.','cor.mon'))),xmn=get(paste0(substr(cor.data[i],1,3),'.lon'))[1],xmx=get(paste0(substr(cor.data[i],1,3),'.lon'))[2],ymn=get(paste0(substr(cor.data[i],1,3),'.lat'))[1],ymx=get(paste0(substr(cor.data[i],1,3),'.lat'))[2])
+      extent(r)<-c(0,360,-90,90)
+      
+      #significant
+      ts<-raster(t(get(paste0('hgt.',substr(cor.data[i],5,8),'.cor.test'))))
+      extent(ts)<-c(0,360,-90,90)
+      p<-rasterToPoints(ts, fun=function(x){x<0.1})
+      
+      main<-paste0('Correlation between hgt and ',substr(cor.data[i],5,9),"(lag=",lag,")")
+      
+      scales=list(x=list(
+        at=seq(0,360,30),
+        labels= c(0,'30E','60E','90E','120E','150E',180,'150W','120W','90W','60W','30W',0),tck=1.5),
+        y=list(at=seq(-90,90,30),labels=c('90S','60S','30S','0','30N','60N','90N'),tck=1.5))
+      
+      setwd(outdir)
+      png(paste0(main,'_',mon[month],'.png'),width=900,height = 600)
+      pl<-levelplot(r,
+                    isField = "dXY", 
+                    main=list(label=main,cex=2.5,x=0.07,just='left'),
+                    sub=list(label=mon[month],cex=2.5,x=0.95,y=24.7),
+                    xlab=list(label='data:NCEP and ASOS monthly data\nperiod:1979~2018',x=0.85),
+                    col.regions = pal,
+                    at=breaks,
+                    margin =list(draw=FALSE,scales=list(draw=FALSE)), 
+                    par.settings=list(layout.heights=list(xlab.key.padding=1)),
+                    colorkey=list(space='bottom',labels = list(at =breaks1)),
+                    scales=scales,
+                    xlim=c(0,360),ylim=c(-90,90))+
+        layer(panel.points(p,pch=4,cex=0.1,col='black'))+
+        layer(sp.polygons(world))
+      
+      print(pl)
+      
+      trellis.focus("panel", 1, 1, clip.off=TRUE, highlight=FALSE)
+      
+      panel.axis("bottom",at=c(10,20,40,50,70,80,100,110,130,140,160,170,190,200,220,230,250,260,280,290,310,320,340,350),tck=1,labels="",check.overlap=TRUE, outside=TRUE)
+      panel.axis("left",at=c(-80,-70,-50,-40,-20,-10,10,20,40,50,70,80),tck=1,labels="",check.overlap=TRUE, outside=TRUE)
+      
+      dev.off()  
+    }
+  }
+}
+
+
+
+
