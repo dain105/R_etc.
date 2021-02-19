@@ -1,0 +1,56 @@
+myfunc1<-function(url){ 
+  
+  line <- readLines(url, encoding = "euc-kr") 
+  title <- line[str_detect(line, "<tr><td>")] 
+  title <- gsub("<.+?>|\t", "", title) 
+  title1<-title[str_detect(title, "E")] 
+  
+  #</td><td>를 공백으로 바꾸 
+  pos.1<-str_locate(title1,"/") 
+  pos.2<-str_locate(title1,"N")
+  pos.3<-str_locate(title1,"E") 
+  
+  number<-substr(title1,1,pos.1[,1]-5)
+  day<-substr(title1,pos.1[,1]-4,pos.1[,1]+5) 
+  size<-substr(title1,pos.1[,1]+15,pos.1[,1]+17) 
+  temp<-pos.2[,1]-pos.1[,1]-18 
+  
+  lat <- substr(title1, pos.2[,1]-temp, pos.2[,1]-1) 
+  lat <- as.numeric(lat) 
+  
+  lon <- substr(title1, pos.3[,1]-7, pos.3[,1]-1) 
+  lon <- gsub("N","",lon) 
+  lon <- as.numeric(lon) 
+  data1 <- cbind(number=number, day=day, size=size, lat=lat, lon=lon) 
+  data1=data.frame(data1) 
+  
+  data1$size=as.numeric(paste(data1$size)) 
+  data1$lon=as.numeric(paste(data1$lon)) 
+  data1$lat=as.numeric(paste(data1$lat)) 
+  
+  
+  return(data1) 
+  
+} 
+
+url <- "http://www.kma.go.kr/weather/earthquake_volcano/domesticlist.jsp?startTm=1980-01-01&endTm=2016-12-26&startSize=999&endSize=999&startLat=&endLat=&startLon=&endLon=&lat=&lon=&dist=&keyword=&x=48&y=12" 
+data1<-myfunc1(url) 
+url1 <- "http://www.kma.go.kr/weather/earthquake_volcano/domesticlist.jsp?startTm=2012-01-03&endTm=2017-05-11&startSize=999&endSize=999&startLat=&endLat=&startLon=&endLon=&lat=&lon=&dist=&keyword=&x=48&y=12" 
+data2<-myfunc1(url1) 
+
+t.data<-rbind(data1,data2) 
+#최근 1년동안 발생한 지진
+# check max magnitute date and data 
+t.data[which(t.data$size==max(t.data$size)),] 
+t.data$col<-NA 
+t.data[which(round(t.data$size,0)==2),"col"]="lightblue" 
+t.data[which(round(t.data$size,0)==3),"col"]="Green" 
+t.data[which(round(t.data$size,0)==4),"col"]="Orange" 
+t.data[which(round(t.data$size,0)==5),"col"]="Red" 
+
+library(maps) 
+map('world','South Korea') 
+
+points(t.data$lon, t.data$lat, cex=t.data$size/2, pch=16, col=t.data$col) 
+points(t.data$lon, t.data$lat, cex=t.data$size/2, pch=1, col=1) 
+
