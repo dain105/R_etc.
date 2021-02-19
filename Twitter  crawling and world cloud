@@ -1,0 +1,48 @@
+
+##트위터 크롤링을 위한 패키지 설치
+if (!require("base64enc")) install.packages("base64enc")
+if (!require("RCurl")) install.packages("RCurl")
+if (!require("twitteR")) install.packages("twitteR")
+if (!require("ROAuth")) install.packages("ROAuth")
+
+reqURL <- "https://api.twitter.com/oauth/request_token"
+accessURL <- "https://api.twitter.com/oauth/accsess_token"
+authURL <- "https://api.twitter.com/oauth/authorize"
+
+##이 부분은 트위터 API부분 컨슈머키, 컨슈머시크릿,액세스토큰,액세스토큰 시크릿은 개별 발급 받은 것 입력
+consumerKey <- "개인컨슈머키입력"
+consumerSecret <- "개인컨슈머시크릿키입력"
+accesstoken <- "개인액세스토큰입력"
+accesstokensecret <- "개인액세스토큰시크릿입력"
+
+##  권한 받았는지 확인
+options(RCurlOptions = list(cainfo = system.file("CurlSSL", "cacert.pem", package = "RCurl")))
+download.file(url="https://curl.haxx.se/ca/cacert.pem", destfile = "carcert.pem")
+setup_twitter_oauth(consumerKey, consumerSecret, accesstoken, accesstokensecret)
+
+##트위터에서 검색하기 '대구대'는 이 두가지 포함한 트위터 내용. 이부분에 크롤링할 단어 넣기 
+string <- '대구+틴탑'
+string <- iconv(string, 'CP949', 'UTF8')
+## n = 이 부분에 몇개의 데이터를 끌어올지 설정. 최대치
+tweets <- searchTwitter(searchString = string, n = 100,  retryOnRateLimit = 1000, since='2017-05-13')
+tweets
+text_extracted <- sapply(tweets, function(t) t$getText())
+text_extracted
+library(stringr)
+####################################################################################################
+text_extracted <- str_replace_all(text_extracted,"[0-9]","")
+text_extracted <- str_replace_all(text_extracted,"[#+]","")
+text_extracted <- gsub("[RT+]","",text_extracted)
+text_extracted <- gsub("https","",text_extracted)
+text_extracted <- sapply(text_extracted, extractNoun, USE.NAMES=F)
+
+data4 <- unlist(text_extracted)
+
+data4 <- Filter(function(x){nchar(x)>=3}, data4)  #2글자 이상인 것만 추출
+wordcount <-sort(table(data4)) # 빈도순으로 단어의 빈도 확인
+library(RColorBrewer)
+palete <- brewer.pal(9, "Set3")
+
+wordcloud(names(wordcount), freq=wordcount, scale=c(4,0.6), rot.per=0.2, min.freq=2, random.order=F,
+          random.color=T, colors=palete)
+
