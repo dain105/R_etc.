@@ -1,0 +1,23 @@
+
+#k means clustering
+fit.kmeans <- kmeans(data, n) #n= number of clustring
+
+
+# Gaussian mixture model
+
+library(mclust)
+fit.mclust<-Mclust(data, G=n)
+summary(fit.mclust)
+
+
+#plot
+
+plot(data[which(fit.kmeans$cluster==1),], pch=4, cex=1, col=4, xlim=c(-4,2.6), ylim=c(-2.5,2.5),
+     main="K-means clustering (k=n)")
+points(data[which(fit.kmeans$cluster==2),], pch=9, cex=1, col="#8b4513", xlim=c(-2,2), ylim=c(-2,2))
+points(data[which(fit.kmeans$cluster==3),], pch=10, cex=1, col="#ff7e24", xlim=c(-2,2), ylim=c(-2,2))
+points(data[which(fit.kmeans$cluster==4),], pch=6, cex=1, col=6, xlim=c(-2,2), ylim=c(-2,2))
+.
+.
+.
+points(data[which(fit.kmeans$cluster==n),], pch=6, cex=1, col=7, xlim=c(-2,2), ylim=c(-2,2))
