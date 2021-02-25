@@ -1,0 +1,23 @@
+
+
+
+# data의 nfactor 갯수결정
+# 1. scree plot 
+# 2. 누적 분산 설명 80% 이상
+# 3. 고유값 1이상.
+
+#주성분 분석
+library(psych)
+pca<-principal(data, rotate="varimax", nfactors=n) n=요인 갯수
+
+요인분석
+library(psych)
+p_cor<-princomp(data,cor=T) # cor=T option: a logical value indicating whether the calculation should use the correlation matrix or the covariance matrix. 
+summary(p_cor) 
+screeplot(p_cor,type="lines")
+
+pca.ma<-principal(data, rotate="varimax", nfactors=n)
+print(pca.ma, digits =3)
+pca.mat<-pca.ma$weights #가중행렬
+
+
