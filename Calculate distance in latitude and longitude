@@ -1,0 +1,3 @@
+library(spTimer)
+
+dist<-spT.geo.dist(as.numeric(data1[,c("lon","lat")]),as.data.frame(data2[,c("lon","lat")]))
