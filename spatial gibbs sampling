@@ -1,0 +1,15 @@
+  set.seed(12343)
+  m_gp <- spT.Gibbs(formula=temp ~ lon + lat + alt,
+                    time.data=spT.time(t.series=365, segment=4), 365 days and 4years
+                    data=DataFit, #fitting data
+                    model="GP", #AR, GPP are avalilable
+                    coords=coords, 
+                    priors=priors,
+                    nItr=3000, #iteration
+                    nBurn=1000, #burn in periods
+                    cov.fnc="exponential", 
+                    report=1000,
+                    # distance.method="geodetic:km",
+                    # spatial.decay=spatial.decay,
+                    spatial.decay=spT.decay(distribution="FIXED", value=para.spatial[i]),
+                    tol.dist=0.1) 
