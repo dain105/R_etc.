@@ -1,8 +1,0 @@
-RMSE <- function(z, zhat) {
-  z <- as.matrix(z)
-  zhat <- as.matrix(zhat)
-  x <- c(z - zhat)
-  u <- x[!is.na(x)]
-  round(sqrt(sum(u^2)/length(u)), 4)
-
-RMSE(z,zhat)
