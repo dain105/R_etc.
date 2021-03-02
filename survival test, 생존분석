@@ -1,0 +1,62 @@
+# 다음 데이터는 1967-1980의 샘플입니다.
+# 에반스 카운티 연구. 생존 기간 (년)
+# 두 집단은 25 명이 참여했습니다.
+# 그룹 1은 만성 질환의 병력이 없다 (CHR = 0).
+# 그룹 2은 만성 질환의 병력이있다(CHR = 1) :
+
+install.packages("survival")
+library(survival)
+#########################
+#Kaplan_Meier의 생존함수#
+#########################
+time1<-c(12.3, 5.4, 8.2, 12.2, 11.7, 10.0,
+         5.7, 9.8, 2.6, 11.0, 9.2, 12.1, 6.6,
+         2.2, 1.8, 10.2, 10.7, 11.1, 5.3, 3.5,
+         9.2, 2.5, 8.7, 3.8, 3.0)
+status1<-c(0,1,1,0,rep(1,7),0,rep(1,13))
+#cnecored된 집단에 0, 그밖은 1로 표현.
+length(time1);length(status1)
+
+time2<-c(5.8, 2.9, 8.4, 8.3, 9.1, 4.2, 4.1, 1.8,
+         3.1, 11.4, 2.4, 1.4, 5.9, 1.6, 2.8, 4.9, 3.5, 6.5, 9.9, 3.6, 5.2, 8.8, 7.8, 4.7, 3.9)
+status2<-c(rep(1,25))
+#cencored 없으므로, 다 1로 줌
+length(time2);length(status2)
+
+
+time <- c(time1, time2)
+status <- c(status1, status2)
+group <- c(rep(1,25), rep(2,25))
+
+fit <- survfit(Surv(time, status, type="right")~group)
+
+#95% 신뢰구간 구하기.
+fit_1 <- survfit(Surv(time, status, type="right")~1)
+plot(fit_1)
+#그림에 대한 해석을 위해 abline을 줬다.
+abline(h=0.0, col="green4", lty=1)
+#시간이 경과함에 따라 생존 확률은 줄어든다.
+abline(v=6.6, col="green4", lty=1)
+abline(v=7.8, col="green4", lty=1)
+#6.6년이상 7.8년미만의 생존확률이 0.4%이다.
+
+
+
+library(RColorBrewer)
+cols<-brewer.pal(8.,"Set1")
+#mark 하면 중도절단된 부분표시
+plot(fit, ylab="Survival", xlab="year", col=cols, lty=2:3, mark=2)
+legend(0.2,0.35,c("CHR=0", "CHR=1"), col = c("red", "blue"), lty = 2:3)
+#CHR=0(만성질환이 없는 그룹)은 1그룹, CHR=1(만성 질환이 있는그룹)은 2그룹이다. 
+#빨간색의 1그룹(만성질환이 없는 그룹)이 더 높은 생존률을 보인다.
+
+###############################
+#########logrnak test##########
+###############################
+
+#rolg-rank의 귀무가설은 (H0:두 집단의 생존함수는 같다.)
+fit <- survdiff(Surv(time, status, type="right")~group)
+# chisquar(df=1, a=0.05) = 3.84
+# (O-E)^2/V = 7.99 >3.84 
+# p=0.0047 로 0.05보다 작다.
+# 귀무가설이 기각. 즉 두집단 생존함수는 다른 차이가 있다.
