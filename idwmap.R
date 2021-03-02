@@ -8,7 +8,7 @@ library(ggmap)
 
 gg2<-data
 coordinates(gg2)<-c("lon","lat")
-grd<-as.data.frame(spsample(gg2, "regular",n=50000))
+grd<-as.data.frame(spsample(gg2, "regular",n=50000))#The higher the number of n, the higher the resolution
 names(grd)<-c("lon","lat")
 coordinates(grd)<-c("lon","lat")
 gridded(grd)=TRUE
