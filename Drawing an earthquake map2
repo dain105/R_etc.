@@ -56,4 +56,3 @@ points(t.data$lon, t.data$lat, cex=t.data$size/2, pch=1, col=1)
 
 
 
-![Rplot](https://user-images.githubusercontent.com/44390404/109618471-eac5f300-7b7a-11eb-9f98-d2b24cbc7a7a.png)
