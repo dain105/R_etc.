@@ -1,3 +1,4 @@
 library(spTimer)
+# This geodetic distance provides the distance between the locations in Kilometers (k.m.) and Miles, using spherical law of Cosines.
 
-dist<-spT.geo.dist(as.numeric(data1[,c("lon","lat")]),as.data.frame(data2[,c("lon","lat")]))
+dist<-spT.geo.dist(as.numeric(data1[,c("lon","lat")]),as.data.frame(data2[,c("lon","lat")]),KM=TRUE)
