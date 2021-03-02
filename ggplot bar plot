@@ -1,0 +1,14 @@
+par(mar=c(10,10,10,10)) # set margins
+
+ggplot(data=data,aes(x=date,y=value))+
+  theme_bw()+
+  geom_bar(stat="identity",fill="blue",color="white")+ 
+  ggtitle("Input your title")+
+  xlab("input xlab name")+
+  ylab("input value name")+
+  theme(plot.title=element_text(hjust=0.5,size=25))+ # 타이틀 글자 세팅
+  theme(axis.title=element_text(hjust=0.5,size=20))+ # 레이블 글자 세팅
+  theme(axis.text.x = element_text(size=15))+ # x축 눈금 글자 세팅
+  theme(axis.text.y = element_text(size=15))+  #y축 눈금 글자 세팅
+  scale_y_continuous(breaks=seq(0,1200,200))+ # y축 눈금
+  scale_x_continuous(breaks=seq(1975,2020,5)) # x축 눈금
