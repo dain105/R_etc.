@@ -1,0 +1,87 @@
+library(raster)
+library(rasterVis)
+library(maps)
+library(mapdata)
+library(maptools)
+
+#############################PCC#################################
+PCC<-function(OBS.anom.data,ECM.anom.data){
+  cor.data<-array(NA,dim=c(240,121))
+  
+  x<-as.vector(OBS.anom.data)
+  y<-as.vector(ECM.anom.data)
+  
+  c<-cor.test(x,y)
+  return(c)
+}
+
+#############################TCC#################################
+
+TCC<-function(OBS.anom.data,ECM.anom.data){
+  cor.data<-array(NA,dim=c(240,121))
+  cor.significant<-array(NA,dim=c(240,121))
+  out<-list()
+  for(i in 1:240){
+    for(j in 1:121){
+      c<-cor.test(OBS.anom.data[i,j,], ECM.anom.data[i,j,])
+      cor.data[i,j]<-ifelse(c$estimate>0.8,0.8,ifelse(c$estimate<(-0.8),-0.8,c$estimate))
+      cor.significant[i,j]<-c$p.value
+    }
+  }
+  out$cor<-(cor.data)
+  out$sig<-(cor.significant)
+  return(out)
+}
+
+#############################MSE, MSSS###############################
+MSE<-function(z,zhat,lon,lat){
+  lat1<-cos(lat*4*atan(1)/180)
+  if(length(dim(z))==2){
+    z<-as.matrix(z)
+    zhat<-as.matrix(zhat)
+    (sum(((c(t(z))-c(t(zhat)))^2)*lat1))/(sum(lat1)*dim(z)[1])
+  }else if(length(dim(z))==3){
+    z1<-c()
+    zhat1<-c()
+    for(i in 1:dim(z)[3]){
+      z1<-c(z1,c(t(as.matrix(z[,,i]))))
+      zhat1<-c(zhat1,c(t(as.matrix(zhat[,,i]))))
+    }
+    (sum(((z1-zhat1)^2)*lat1))/(sum(lat1)*dim(z)[1]*dim(z)[3])
+  }else if(length(dim(z))==4){
+    z1<-c()
+    zhat1<-c()
+    for(i in 1:dim(z)[3]){
+      for(j in 1:dim(z)[4]){
+        z1<-c(z1,c(t(as.matrix(z[,,i,j]))))
+        zhat1<-c(zhat1,c(t(as.matrix(zhat[,,i,j]))))
+      }
+    }
+    (sum(((z1-zhat1)^2)*lat1))/(sum(lat1)*dim(z)[1]*dim(z)[3]*dim(z)[4])
+  }
+}
+
+MSSS<-function(mse,msec)
+{1-mse/msec}
+
+
+###########################RMSE######################
+RMSE <- function(z, zhat) {
+  z <- as.matrix(z)
+  zhat <- as.matrix(zhat)
+  x <- c(z - zhat)
+  u <- x[!is.na(x)]
+  round(sqrt(sum(u^2)/length(u)), 3)
+}
+###########################BIAS######################
+BIAS <- function(z, zhat) {
+  z <- as.matrix(z)
+  zhat <- as.matrix(zhat)
+  x <- c(zhat - z)
+  u <- x[!is.na(x)]
+  round(sum(u)/length(u), 3)
+}
+
+
+
+
