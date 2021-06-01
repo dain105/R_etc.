@@ -17,4 +17,4 @@ fullgrid(grd)<-TRUE
 mse.idw <-gstat::idw(mean.mtx~1, gg2, newdata=grd, idp=2)
 r<- raster(mse.idw)
 plot(r)
-
+map('worldHires', region='south korea',add=T)
